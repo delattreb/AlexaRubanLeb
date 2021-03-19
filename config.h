@@ -1,7 +1,7 @@
 //DEBUG INFORMATION
-#define SERIALLOG
+//#define SERIALLOG
 //#define INFO
-#define DEBUG
+//#define DEBUG
 //#define WIFIDEBUG
 
 // Serial configuration
