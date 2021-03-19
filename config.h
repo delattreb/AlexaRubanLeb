@@ -9,7 +9,7 @@
 
 //Alexa device
 #define DEVICE_NAME "Ruban1"
-
+#define LED_EFFECT FX_MODE_FIREWORKS
 //ESP8266 configuration
 #define NETWORKNAME "ESPRuban1"
 #define ATTENPTING 1000
@@ -21,7 +21,7 @@
 
 #define LED_COUNT 30
 #define SPEED_EFFECT 3500
-#define BRIGHTNESS 150
+#define BRIGHTNESS 150 //0-255
 #define RED 255
 #define GREEN 0
 #define BLUE 0
