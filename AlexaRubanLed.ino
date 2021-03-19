@@ -15,8 +15,8 @@ void deltaChanged(EspalexaDevice *dev);
 Espalexa espalexa;
 EspalexaDevice *epsilon;
 
-static int effect = 2;
-static uint8_t bright = BRIGHTNESS; //0-255
+static int effect = LED_EFFECT;
+static uint8_t bright = BRIGHTNESS;
 static int speed = SPEED_EFFECT;
 uint8_t red = RED, green = GREEN, blue = BLUE;
 
@@ -58,7 +58,9 @@ void setup()
 	}
 	// initialize EEPROM with predefined size
 	EEPROM.begin(EEPROM_SIZE);
-
+	//BuiltIn LED
+	pinMode(LED_BUILTIN, OUTPUT);
+	digitalWrite(LED_BUILTIN, HIGH);	 // turn the LED off by making the voltage LOW
 	//Input configuration
 	pinMode(PIN_BUTTON_TOUCH, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_TOUCH), pinDidChange, CHANGE);
@@ -129,6 +131,7 @@ void loop()
 		EEPROM.write(EEPROM_PLACE_GREEN, green);
 		EEPROM.write(EEPROM_PLACE_BLUE, blue);
 		EEPROM.commit();
+		saveLed();
 	}
 }
 
@@ -167,4 +170,12 @@ void deltaChanged(EspalexaDevice *d)
 		Serial.println(blue);
 #endif
 	}
+}
+
+// Blink after saving data 
+void saveLed()
+{
+	digitalWrite(LED_BUILTIN, LOW); // turn the LED on (HIGH is the voltage level)
+	delay(1000);					 // wait for a second
+	digitalWrite(LED_BUILTIN, HIGH);	 // turn the LED off by making the voltage LOW
 }
