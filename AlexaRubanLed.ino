@@ -1,8 +1,9 @@
+#include <arduino.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>
 #include <GyverButton.h>
 #include <EEPROM.h>
-#include "WS2812FX.h"
+#include <WS2812FX.h>
 #include <Espalexa.h>
 #include "config.h"
 
