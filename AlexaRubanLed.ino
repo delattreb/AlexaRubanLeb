@@ -8,7 +8,7 @@
 #include "config.h"
 
 WiFiClient wifiClient;
-GButton touch(PIN_BUTTON_TOUCH, LOW_PULL, NORM_OPEN);
+GButton touch(PIN_BTN, LOW_PULL, NORM_OPEN);
 WS2812FX ws2812fx = WS2812FX(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 
 //callback functions
@@ -37,6 +37,11 @@ void setup()
 	Serial.println(ESP.getSdkVersion());
 	Serial.print("MAC: ");
 	Serial.println(WiFi.macAddress());
+	Serial.print("Device name: ");
+	Serial.println(DEVICE_NAME);
+	Serial.print("Network name: ");
+	Serial.println(NETWORKNAME);
+
 #endif
 	WiFiManager wifiManager;
 	//Reset setting
@@ -61,10 +66,10 @@ void setup()
 	EEPROM.begin(EEPROM_SIZE);
 	//BuiltIn LED
 	pinMode(LED_BUILTIN, OUTPUT);
-	digitalWrite(LED_BUILTIN, HIGH);	 // turn the LED off by making the voltage LOW
+	digitalWrite(LED_BUILTIN, HIGH); // turn the LED off by making the voltage LOW
 	//Input configuration
-	pinMode(PIN_BUTTON_TOUCH, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_TOUCH), pinDidChange, CHANGE);
+	pinMode(PIN_BTN, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(PIN_BTN), pinDidChange, CHANGE);
 	touch.setDebounce(80);
 	touch.setTimeout(200);
 
@@ -76,14 +81,14 @@ void setup()
 		blue = EEPROM.read(EEPROM_PLACE_BLUE);
 
 #ifdef DEBUG
-		Serial.print("Load EEPROM: ");
-		Serial.print("Bright");
-		Serial.print(bright);
-		Serial.print("R");
-		Serial.print(red);
-		Serial.print("G");
-		Serial.print(green);
-		Serial.print("B");
+		Serial.println("Load EEPROM");
+		Serial.print("B: ");
+		Serial.println(bright);
+		Serial.print("R: ");
+		Serial.println(red);
+		Serial.print("G: ");
+		Serial.println(green);
+		Serial.print("B: ");
 		Serial.println(blue);
 #endif
 	}
@@ -117,22 +122,22 @@ void loop()
 	if (touch.isDouble())
 	{
 #ifdef DEBUG
-		Serial.print("Save EEPROM: ");
-		Serial.print("Bright");
-		Serial.print(bright);
-		Serial.print("R");
-		Serial.print(red);
-		Serial.print("G");
-		Serial.print(green);
-		Serial.print("B");
+		Serial.println("Save EEPROM");
+		Serial.print("B: ");
+		Serial.println(bright);
+		Serial.print("R: ");
+		Serial.println(red);
+		Serial.print("G: ");
+		Serial.println(green);
+		Serial.print("B: ");
 		Serial.println(blue);
+		saveLed();
 #endif
 		EEPROM.write(EEPROM_PLACE_BRIGHT, bright);
 		EEPROM.write(EEPROM_PLACE_RED, red);
 		EEPROM.write(EEPROM_PLACE_GREEN, green);
 		EEPROM.write(EEPROM_PLACE_BLUE, blue);
 		EEPROM.commit();
-		saveLed();
 	}
 }
 
@@ -161,22 +166,27 @@ void deltaChanged(EspalexaDevice *d)
 		ws2812fx.setBrightness(bright);
 		ws2812fx.start();
 #ifdef DEBUG
-		Serial.print("Value: ");
-		Serial.print(bright);
-		Serial.print(", color R");
-		Serial.print(red);
-		Serial.print(", G");
-		Serial.print(green);
-		Serial.print(", B");
+		Serial.println("Alexa value");
+		Serial.print("B: ");
+		Serial.println(bright);
+		Serial.print("R: ");
+		Serial.println(red);
+		Serial.print("G: ");
+		Serial.println(green);
+		Serial.print("B: ");
 		Serial.println(blue);
 #endif
 	}
 }
 
-// Blink after saving data 
+// Blink after saving data
 void saveLed()
 {
-	digitalWrite(LED_BUILTIN, LOW); // turn the LED on (HIGH is the voltage level)
-	delay(1000);					 // wait for a second
-	digitalWrite(LED_BUILTIN, HIGH);	 // turn the LED off by making the voltage LOW
+	for (int i = 0; i <= 3; i++)
+	{
+		digitalWrite(LED_BUILTIN, LOW); // turn the LED on (HIGH is the voltage level)
+		delay(600);
+		digitalWrite(LED_BUILTIN, HIGH); // turn the LED off by making the voltage LOW
+		delay(600);
+	}
 }
