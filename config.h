@@ -28,13 +28,11 @@
 // BTN
 #pragma region BTN_CONFIGURATION
 #define PIN_BTN 5
+#define EFFECT_MAX 8
 #pragma endregion
 
 //Save Data EEPROM
 #pragma region SAVE_DATA
-#define EEPROM_SIZE 1
-#define EEPROM_PLACE_BRIGHT 0
-#define EEPROM_PLACE_RED 1
-#define EEPROM_PLACE_GREEN 2
-#define EEPROM_PLACE_BLUE 3
+#define EEPROM_SIZE 5
+#define EEPROM_START 0
 #pragma endregion
