@@ -16,10 +16,12 @@ void deltaChanged(EspalexaDevice *dev);
 Espalexa espalexa;
 EspalexaDevice *epsilon;
 
-static int effect = LED_EFFECT;
-static uint8_t bright = BRIGHTNESS;
-static int speed = SPEED_EFFECT;
+uint8_t effect = LED_EFFECT;
+uint8_t bright = BRIGHTNESS;
+uint8_t effects[EFFECT_MAX] = {FX_MODE_COLOR_WIPE, FX_MODE_RUNNING_LIGHTS, FX_MODE_COMET, FX_MODE_FIREWORKS, FX_MODE_TWINKLEFOX, FX_MODE_FADE, FX_MODE_SCAN, FX_MODE_DUAL_SCAN};
 uint8_t red = RED, green = GREEN, blue = BLUE;
+int cpt_effect = 0;
+uint16_t speed = SPEED_EFFECT;
 
 // setup
 void setup()
@@ -62,8 +64,6 @@ void setup()
 		ESP.reset();
 		delay(5000);
 	}
-	// initialize EEPROM with predefined size
-	EEPROM.begin(EEPROM_SIZE);
 	//BuiltIn LED
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH); // turn the LED off by making the voltage LOW
@@ -73,25 +73,7 @@ void setup()
 	touch.setDebounce(80);
 	touch.setTimeout(200);
 
-	if (EEPROM.read(EEPROM_PLACE_BRIGHT) >= 1)
-	{
-		bright = EEPROM.read(EEPROM_PLACE_BRIGHT);
-		red = EEPROM.read(EEPROM_PLACE_RED);
-		green = EEPROM.read(EEPROM_PLACE_GREEN);
-		blue = EEPROM.read(EEPROM_PLACE_BLUE);
-
-#ifdef DEBUG
-		Serial.println("Load EEPROM");
-		Serial.print("B: ");
-		Serial.println(bright);
-		Serial.print("R: ");
-		Serial.println(red);
-		Serial.print("G: ");
-		Serial.println(green);
-		Serial.print("B: ");
-		Serial.println(blue);
-#endif
-	}
+	load_EEPROM();
 
 	// Define your devices here.
 	espalexa.addDevice(DEVICE_NAME, deltaChanged, EspalexaDeviceType::color);
@@ -119,25 +101,24 @@ void loop()
 	//WS2812
 	ws2812fx.service();
 
+	if (touch.isSingle())
+	{
+		cpt_effect++;
+		if (cpt_effect >= EFFECT_MAX)
+			cpt_effect = 0;
+		change_effect();
+	}
 	if (touch.isDouble())
 	{
-#ifdef DEBUG
-		Serial.println("Save EEPROM");
-		Serial.print("B: ");
-		Serial.println(bright);
-		Serial.print("R: ");
-		Serial.println(red);
-		Serial.print("G: ");
-		Serial.println(green);
-		Serial.print("B: ");
-		Serial.println(blue);
-		saveLed();
-#endif
-		EEPROM.write(EEPROM_PLACE_BRIGHT, bright);
-		EEPROM.write(EEPROM_PLACE_RED, red);
-		EEPROM.write(EEPROM_PLACE_GREEN, green);
-		EEPROM.write(EEPROM_PLACE_BLUE, blue);
-		EEPROM.commit();
+		cpt_effect--;
+		if (cpt_effect < 0)
+			cpt_effect = EFFECT_MAX - 1;
+		change_effect();
+	}
+
+	if (touch.isTriple())
+	{
+		save_EEPROM();
 	}
 }
 
@@ -155,7 +136,7 @@ void deltaChanged(EspalexaDevice *d)
 	if (d->getName() == DEVICE_NAME)
 	{
 		//Get color
-		bright = d->getValue();
+		bright = uint8_t(d->getValue());
 		red = d->getR();
 		green = d->getG();
 		blue = d->getB();
@@ -179,6 +160,18 @@ void deltaChanged(EspalexaDevice *d)
 	}
 }
 
+// Change LED effect
+void change_effect()
+{
+#ifdef DEBUG
+	Serial.print("Effect: ");
+	Serial.println(cpt_effect);
+#endif
+	ws2812fx.stop();
+	ws2812fx.setMode(effects[cpt_effect]);
+	ws2812fx.start();
+}
+
 // Blink after saving data
 void saveLed()
 {
@@ -189,4 +182,66 @@ void saveLed()
 		digitalWrite(LED_BUILTIN, HIGH); // turn the LED off by making the voltage LOW
 		delay(600);
 	}
+}
+
+// Save EEPROM
+void save_EEPROM()
+{
+#ifdef DEBUG
+	Serial.println("Save EEPROM");
+	Serial.print("B: ");
+	Serial.println(bright);
+	Serial.print("R: ");
+	Serial.println(red);
+	Serial.print("G: ");
+	Serial.println(green);
+	Serial.print("B: ");
+	Serial.println(blue);
+	Serial.print("E: ");
+	Serial.println(effects[cpt_effect]);
+#endif
+	EEPROM.begin(EEPROM_SIZE);
+	int address = EEPROM_START;
+	EEPROM.write(address, bright);
+	address += sizeof(bright);
+	EEPROM.write(address, red);
+	address += sizeof(red);
+	EEPROM.write(address, green);
+	address += sizeof(green);
+	EEPROM.write(address, blue);
+	address += sizeof(blue);
+	EEPROM.write(address, effects[cpt_effect]);
+	EEPROM.end();
+	EEPROM.commit();
+	saveLed();
+}
+
+// Load EEPROM
+void load_EEPROM()
+{
+	EEPROM.begin(EEPROM_SIZE);
+	int address = EEPROM_START;
+	bright = EEPROM.read(address);
+	address += sizeof(bright);
+	red = EEPROM.read(address);
+	address += sizeof(red);
+	green = EEPROM.read(address);
+	address += sizeof(green);
+	blue = EEPROM.read(address);
+	address += sizeof(blue);
+	effect = EEPROM.read(address);
+	EEPROM.end();
+#ifdef DEBUG
+	Serial.println("Load EEPROM");
+	Serial.print("B: ");
+	Serial.println(bright);
+	Serial.print("R: ");
+	Serial.println(red);
+	Serial.print("G: ");
+	Serial.println(green);
+	Serial.print("B: ");
+	Serial.println(blue);
+	Serial.print("E: ");
+	Serial.println(effect);
+#endif
 }
