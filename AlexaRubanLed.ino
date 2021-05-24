@@ -22,6 +22,7 @@ uint8_t effects[EFFECT_MAX] = {FX_MODE_STATIC, FX_MODE_COLOR_WIPE, FX_MODE_RUNNI
 uint8_t red = RED, green = GREEN, blue = BLUE;
 int cpt_effect = 0;
 uint16_t speed = SPEED_EFFECT;
+boolean bWiFi;
 
 // setup
 void setup()
@@ -43,41 +44,45 @@ void setup()
 	Serial.println(DEVICE_NAME);
 	Serial.print("Network name: ");
 	Serial.println(NETWORKNAME);
-
 #endif
-	WiFiManager wifiManager;
-	//Reset setting
-	//wifiManager.resetSettings();
-	wifiManager.setAPStaticIPConfig(IPAddress(10, 0, 0, 1), IPAddress(10, 0, 0, 1), IPAddress(255, 255, 255, 0));
-#ifdef WIFIDEBUG
-	wifiManager.setDebugOutput(true);
-#else
-	wifiManager.setDebugOutput(false);
-#endif
-
-	if (!wifiManager.autoConnect(NETWORKNAME))
-	{
-#ifdef DEBUG
-		Serial.println("Failed to connect");
-#endif
-		delay(1000);
-		ESP.reset();
-		delay(5000);
-	}
 	//BuiltIn LED
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, HIGH); // turn the LED off by making the voltage LOW
+
 	//Input configuration
 	pinMode(PIN_BTN, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(PIN_BTN), pinDidChange, CHANGE);
 	touch.setDebounce(80);
 	touch.setTimeout(200);
 
-	load_EEPROM();
+	// Ignore WiFi manager if Btn is pressed
+	bWiFi = !digitalRead(PIN_BTN);
+	if (bWiFi)
+	{
+		WiFiManager wifiManager;
+		//Reset setting
+		//wifiManager.resetSettings();
+		wifiManager.setAPStaticIPConfig(IPAddress(10, 0, 0, 1), IPAddress(10, 0, 0, 1), IPAddress(255, 255, 255, 0));
+#ifdef WIFIDEBUG
+		wifiManager.setDebugOutput(true);
+#else
+		wifiManager.setDebugOutput(false);
+#endif
 
-	// Define your devices here.
-	espalexa.addDevice(DEVICE_NAME, deltaChanged, EspalexaDeviceType::color);
-	espalexa.begin();
+		if (!wifiManager.autoConnect(NETWORKNAME))
+		{
+#ifdef DEBUG
+			Serial.println("Failed to connect");
+#endif
+			delay(1000);
+			ESP.reset();
+			delay(5000);
+		}
+		// Define your devices here.
+		espalexa.addDevice(DEVICE_NAME, deltaChanged, EspalexaDeviceType::color);
+		espalexa.begin();
+	}
+	load_EEPROM();
 
 	//WS2812
 	ws2812fx.init();
@@ -94,9 +99,12 @@ void loop()
 	//Button gesture
 	touch.tick();
 
-	//Alexa
-	espalexa.loop();
-	delay(1);
+	if (bWiFi)
+	{
+		//Alexa
+		espalexa.loop();
+		delay(1);
+	}
 
 	//WS2812
 	ws2812fx.service();
@@ -175,7 +183,7 @@ void change_effect()
 // Blink after saving data
 void saveLed()
 {
-	for (int i = 0; i <= 3; i++)
+	for (int i = 0; i < CPT_SAVE_BLINK; i++)
 	{
 		digitalWrite(LED_BUILTIN, LOW); // turn the LED on (HIGH is the voltage level)
 		delay(600);
