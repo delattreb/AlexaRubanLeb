@@ -28,7 +28,7 @@
 // BTN
 #pragma region BTN_CONFIGURATION
 #define PIN_BTN 5
-#define EFFECT_MAX 8
+#define EFFECT_MAX 9
 #pragma endregion
 
 //Save Data EEPROM
