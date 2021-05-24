@@ -29,6 +29,7 @@
 #pragma region BTN_CONFIGURATION
 #define PIN_BTN 5
 #define EFFECT_MAX 9
+#define CPT_SAVE_BLINK 3
 #pragma endregion
 
 //Save Data EEPROM
